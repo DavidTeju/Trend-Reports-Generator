@@ -1,29 +1,34 @@
+import json
 from datetime import datetime
 from functools import reduce
 
 import pandas as pd
 
-hey = datetime.now().year
-years = list(range(2019, hey))  # Remember to add for date past August if program can be run past August
 
-frame = pd.read_csv("Graduating Student data/survey_data.csv")
+def main(sections):
+    sections_tables = [run_for_section(section) for section in sections]
+    for table in sections_tables:
+        print(table)
+        # with open(f"{table.name}.csv", "w+") as csv:
+        #     csv.write(table.to_csv())
+
+
+full_data_frame = pd.read_csv("Graduating Student data/survey_data.csv")
 
 # Store MetaData
-full_question, meta_data = frame.loc[0:1].values.tolist()  # Consider converting to df.pop
+full_question, meta_data = full_data_frame.loc[0:1].values.tolist()  # Consider converting to df.pop
 
-# drop meta_data
-frame = frame.drop([0, 1])
+# drop meta_data from table
+full_data_frame = full_data_frame.drop([0, 1])
 
 # transform string dates to datetime dates
-frame["RecordedDate"] = pd.to_datetime(frame["RecordedDate"], format="%Y-%m-%d %H:%M:%S")
+full_data_frame["RecordedDate"] = pd.to_datetime(full_data_frame["RecordedDate"], format="%Y-%m-%d %H:%M:%S")
 
-sections = {"Did you participate in the following types of programs?": ["clubs_Participate", "rec_Participate",
-                                                                        "social_Participate", "leadership_Participate",
-                                                                        "Q10_5_Participate"]}
+with open("section_config.json") as file:
+    sections_config = json.load(file)
+
+
 # Q10_5_Quality : University Ministry
-
-current_section: pd.DataFrame = frame[
-    ["RecordedDate", *sections["Did you participate in the following types of programs?"]]]  # Fix this monstrosity
 
 
 # Actual records start at label [2]
@@ -36,55 +41,52 @@ def in_year(dataframe, year):
             dataframe["RecordedDate"] <= pd.to_datetime(f"{year + 1}-06-01"))
 
 
-by_year: dict[int, pd.DataFrame] = {year: current_section[in_year(current_section, year)] for year in years}
+def run_for_section(section):
+    section_data = [run_for_sub_question(sub_question, section["freq_keys"]) for sub_question in
+                    section["sub_questions"]]
+    section_frame = pd.concat(section_data)
+    section_frame.name = section["question"]
+    return section_frame
 
-year19 = by_year[2019]
 
-# year19.aggregate()
-# print(by_year[2019])
-the_name = "clubs_Participate"
+current_year = datetime.now().year
+years = list(range(2019, current_year))  # Remember to add for date past August if program can be run past August
+by_year: dict[int, pd.DataFrame] = {year: full_data_frame[in_year(full_data_frame, year)] for year in years}
 
 
 def value_frequency_from_name_by_year(year, name):
-    return by_year[year][name].value_counts().to_frame().join(
-        by_year[year][name].value_counts(normalize=True), rsuffix="_%")
+    percent_multiplier = 100
+    frame_of_frequencies = by_year[year][name].value_counts().to_frame()
+    frame_of_frequency_rates = by_year[year][name].value_counts(normalize=True) * percent_multiplier
+    frame_of_frequency_rates = frame_of_frequency_rates.to_frame()
+    return frame_of_frequencies.join(frame_of_frequency_rates, rsuffix="%").applymap(int)
 
 
-def from_name(name):
+def append_percent_to_rate_values(yes_frequency_values):
+    pass  # TODO
+
+
+def run_for_sub_question(sub_question, freq_keys):
     def yes_frequency_values_in_year(year):
-        frequency_values = value_frequency_from_name_by_year(year, name)
-        frequency_values.columns = ["#", "%"]
-        yes_frequency_values: pd.Series = frequency_values.loc["Yes"]
-        yes_frequency_values.name = year
-        return yes_frequency_values
+        frequency_values = value_frequency_from_name_by_year(year, sub_question)
+        frequency_values.columns = [f"#'{freq_keys_to_string(freq_keys)}'", f"%'{freq_keys_to_string(freq_keys)}'"]
+        yes_frequency_values: pd.Series = frequency_values.loc[freq_keys].sum()
+        append_percent_to_rate_values(yes_frequency_values)
+        yes_frequency_values.name = sub_question
+        transposed_frame = yes_frequency_values.to_frame().transpose()
+        transposed_frame.columns = pd.MultiIndex.from_product([[year], transposed_frame.columns])
+        return transposed_frame
 
     list_of_frequencies_by_year = [yes_frequency_values_in_year(year) for year in years]
     frequencies_by_year = pd.concat(list_of_frequencies_by_year, axis=1)
-    print(frequencies_by_year)
+    return frequencies_by_year
 
 
-# TODO convert list of this to dataframe with questions as records
+def freq_keys_to_string(freq_keys: list):
+    if len(freq_keys) == 1:
+        return freq_keys[0]
+    else:
+        return " or ".join(freq_keys)
 
-from_name(the_name)
 
-# print(combine())
-# print(type(combine()))
-
-
-# reduced = reduce(see, years, extract_participate(2019))
-
-# print(reduced)
-
-# print(reduced)
-# print(again)
-#
-# print(pd.merge(frequency.transpose(), again.transpose(), left_index=True, right_index=True))
-
-# frequency = .append)
-
-# yes_frequency = frequency["Yes"]
-# yes_rate = frequency["Yes"]
-
-# print(frequency["Yes"])
-# df()
-# print(by_year[2020].head())
+main(sections_config)
