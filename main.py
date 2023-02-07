@@ -62,22 +62,17 @@ def value_frequency_from_name_by_year(year, name):
     return frame_of_frequencies.join(frame_of_frequency_rates, rsuffix="%").applymap(int)
 
 
-def append_percent_to_rate_values(yes_frequency_values):
-    pass  # TODO
-
-
 def run_for_sub_question(sub_question, freq_keys):
-    def yes_frequency_values_in_year(year):
+    def key_frequency_values_in_year(year):
         frequency_values = value_frequency_from_name_by_year(year, sub_question)
         frequency_values.columns = [f"#'{freq_keys_to_string(freq_keys)}'", f"%'{freq_keys_to_string(freq_keys)}'"]
         yes_frequency_values: pd.Series = frequency_values.loc[freq_keys].sum()
-        append_percent_to_rate_values(yes_frequency_values)
         yes_frequency_values.name = sub_question
         transposed_frame = yes_frequency_values.to_frame().transpose()
         transposed_frame.columns = pd.MultiIndex.from_product([[year], transposed_frame.columns])
         return transposed_frame
 
-    list_of_frequencies_by_year = [yes_frequency_values_in_year(year) for year in years]
+    list_of_frequencies_by_year = [key_frequency_values_in_year(year) for year in years]
     frequencies_by_year = pd.concat(list_of_frequencies_by_year, axis=1)
     return frequencies_by_year
 
