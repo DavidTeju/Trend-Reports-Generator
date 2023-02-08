@@ -48,5 +48,22 @@
       "Very Satisfied",
       "Somewhat Satisfied"
     ]
+  },
+  {
+    "type": "mean",
+    "question": "Satisfaction with the quality of the programs",
+    "sub_questions": [
+      "clubs_Quality",
+      "rec_Quality",
+      "social_Quality",
+      "leadership_Quality",
+      "Q10_5_Quality",
+      "Internships_Quality",
+      "CBL_Quality",
+      "Study_away_Quality",
+      "Research_Quality",
+      "Q22_6_Quality",
+      "Q22_7_Quality"
+    ]
   }
 ]

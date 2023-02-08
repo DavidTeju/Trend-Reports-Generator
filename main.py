@@ -1,6 +1,6 @@
 import json
+import sys
 from datetime import datetime
-from functools import reduce
 
 import pandas as pd
 
@@ -28,6 +28,18 @@ with open("section_config.json") as file:
     sections_config = json.load(file)
 
 
+def in_year(dataframe, year):
+    return (pd.to_datetime(f"{year}-08-01") <= dataframe["RecordedDate"]) & (
+            dataframe["RecordedDate"] <= pd.to_datetime(f"{year + 1}-06-01"))
+
+
+current_year = datetime.now().year
+years = list(range(2019, current_year))  # TODO Remember to add for date past August if program can be run past August
+by_year: dict[int, pd.DataFrame] = {year: full_data_frame[in_year(full_data_frame, year)] for year in years}
+with open("satisfied_map.json", "r") as json_file:
+    satisfied_map: dict[str, int] = json.load(json_file)
+
+
 # Q10_5_Quality : University Ministry
 
 
@@ -36,22 +48,38 @@ with open("section_config.json") as file:
 # co/extra-curricular programs a... - Did you participate in the following types of programs? - Student clubs and
 # organizations
 
-def in_year(dataframe, year):
-    return (pd.to_datetime(f"{year}-08-01") <= dataframe["RecordedDate"]) & (
-            dataframe["RecordedDate"] <= pd.to_datetime(f"{year + 1}-06-01"))
+
+def mean_frame_for_sub_question(section) -> pd.DataFrame:
+    sub_questions = section["sub_questions"]
+
+    def get_mean_values_for_subquestion(year_values, sub_question):
+        return year_values[sub_question].dropna().map(satisfied_map.get).mean()
+
+    def get_mean_values_for_year(year):
+        return [get_mean_values_for_subquestion(by_year[year], sub_question) for sub_question in sub_questions]
+
+    all_vals = {year: get_mean_values_for_year(year) for year in years}
+    to_return = pd.DataFrame(all_vals, index=sub_questions).round(2)
+    to_return.columns.name = "Question"
+
+    return to_return
 
 
 def run_for_section(section):
-    section_data = [run_for_sub_question(sub_question, section["freq_keys"]) for sub_question in
-                    section["sub_questions"]]
-    section_frame = pd.concat(section_data)
+    function_dict = {"freq": freq_frame_for_subquestion, "mean": mean_frame_for_sub_question}
+
+    section_frame = function_dict.get(section["type"], sys.exit)(section)
+
     section_frame.name = section["question"]
     return section_frame
 
 
-current_year = datetime.now().year
-years = list(range(2019, current_year))  # Remember to add for date past August if program can be run past August
-by_year: dict[int, pd.DataFrame] = {year: full_data_frame[in_year(full_data_frame, year)] for year in years}
+def freq_frame_for_subquestion(section):
+    section_data = [freq_for_sub_question(sub_question, section["freq_keys"]) for sub_question in
+                    section["sub_questions"]]
+    section_frame: pd.DataFrame = pd.concat(section_data)
+    section_frame.columns.names = [None, "Question"]
+    return section_frame
 
 
 def value_frequency_from_name_by_year(year, name):
@@ -62,7 +90,7 @@ def value_frequency_from_name_by_year(year, name):
     return frame_of_frequencies.join(frame_of_frequency_rates, rsuffix="%").applymap(int)
 
 
-def run_for_sub_question(sub_question, freq_keys):
+def freq_for_sub_question(sub_question: str, freq_keys: list[str]):
     def key_frequency_values_in_year(year):
         frequency_values = value_frequency_from_name_by_year(year, sub_question)
         frequency_values.columns = [f"#'{freq_keys_to_string(freq_keys)}'", f"%'{freq_keys_to_string(freq_keys)}'"]
