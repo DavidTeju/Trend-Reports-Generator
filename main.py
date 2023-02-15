@@ -1,5 +1,5 @@
 import json
-import sys
+import re
 from datetime import datetime
 
 import pandas as pd
@@ -20,14 +20,19 @@ def mean_frame_for_sub_question(section) -> pd.DataFrame:
         return [get_mean_values_for_sub_question(by_year[year], sub_question) for sub_question in question_export_tags]
 
     all_vals = {year: get_mean_values_for_year(year) for year in years}
-    to_return = pd.DataFrame(all_vals, index=sub_questions).round(2)
+    to_return = pd.DataFrame(all_vals,
+                             index=[get_question(question_export_tag) for question_export_tag in
+                                    question_export_tags]).round(2)
     to_return.columns.name = "Question"
 
     return to_return
 
 
-def run_for_section(section):
-    function_dict = {"freq": freq_frame_for_subquestion, "mean": mean_frame_for_sub_question}
+def get_question(tag):
+    full_question = full_questions[full_data_frame.columns.get_loc(tag)]
+    full_question = re.sub("\\(.*?\\)", "", full_question)  # Remove contextual info (in brackets like this)
+    full_question = re.sub("[^a-zA-Z0-9]*$", "", full_question)  # Remove trailing punctuation.
+    return full_question.split(" - ")[-1].strip()  # Split and get last member as that should be the relevant title
 
 
 def section_type_error(section):
