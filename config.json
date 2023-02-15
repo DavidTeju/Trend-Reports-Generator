@@ -145,6 +145,12 @@
       "sub_questions": ["attend_again", "recommend_DU"]
     },
     {
+      "question": "What will be your annual SALARY (in thousands)",
+      "type": "mean",
+      "sub_questions": ["Q28"],
+      "filter": ">= 12000"
+    },
+    {
       "question": "Satisfaction with the quality of the programs",
       "type": "freq",
       "sub_questions": [

@@ -10,11 +10,28 @@ def in_year(dataframe, year):
             dataframe["RecordedDate"] <= pd.to_datetime(f"{year + 1}-06-01"))
 
 
+def isNum(v):
+    try:
+        float(v)
+    except ValueError:
+        return False
+    return True
+
+
 def mean_frame_for_sub_question(section) -> pd.DataFrame:
     question_export_tags = section["sub_questions"]
 
+    def passes_filter(x):
+        if "filter" in section:
+            return eval(f"x{section['filter']}")  # evaluate x with the filter attribute
+        else:
+            return [True for _ in x]
+
+    def convert_to_score(value):
+        return float(value) if isNum(value) else score_map.get(value)
+
     def get_mean_values_for_sub_question(year_values, question_export_tag):
-        return year_values[question_export_tag].map(score_map.get).mean()
+        return year_values[question_export_tag].map(convert_to_score).where(passes_filter).mean()
 
     def get_mean_values_for_year(year):
         return [get_mean_values_for_sub_question(by_year[year], sub_question) for sub_question in question_export_tags]
