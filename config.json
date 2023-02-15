@@ -1,0 +1,187 @@
+{
+  "section_config": [
+    {
+      "question": "Did you participate in the following types of programs?",
+      "type": "freq",
+      "sub_questions": [
+        "clubs_Participate",
+        "rec_Participate",
+        "social_Participate",
+        "leadership_Participate",
+        "Q10_5_Participate"
+      ],
+      "freq_keys": ["Yes"]
+    },
+    {
+      "question": "Satisfaction with the quality of the programs",
+      "type": "mean",
+      "sub_questions": [
+        "clubs_Quality",
+        "rec_Quality",
+        "social_Quality",
+        "leadership_Quality",
+        "Q10_5_Quality"
+      ]
+    },
+    {
+      "question": "Satisfaction with the level of availability of the programs",
+      "type": "mean",
+      "sub_questions": [
+        "clubs_Availability",
+        "rec_Availability",
+        "social_Availability",
+        "leadership_Availability",
+        "Q10_5_Availability"
+      ]
+    },
+    {
+      "question": "Please rate your level of satisfaction with the following aspects of your overall academic experience at Dominican",
+      "type": "mean",
+      "sub_questions": [
+        "faculty_interact",
+        "prog_reqs",
+        "fac_advising",
+        "Q19_9",
+        "career_prep",
+        "library_res",
+        "classroom",
+        "ed_prep",
+        "overall_acad"
+      ]
+    },
+    {
+      "question": "In your major",
+      "type": "mean",
+      "sub_questions": [
+        "variety_major",
+        "availability_major",
+        "relevance_major",
+        "overall_quality_major"
+      ]
+    },
+    {
+      "question": "Core Curriculum",
+      "type": "mean",
+      "sub_questions": [
+        "variety_core",
+        "availability_core",
+        "relevance_core",
+        "overall_quality_core"
+      ]
+    },
+    {
+      "question": "Electives",
+      "type": "mean",
+      "sub_questions": [
+        "variety_elective",
+        "availability_elective",
+        "relevance_elective",
+        "overall_quality_elective"
+      ]
+    },
+    {
+      "question": "Did you participate in the following types of experiential learning programs? - YES",
+      "type": "freq",
+      "sub_questions": [
+        "Internships_Participate",
+        "CBL_Participate",
+        "Study_away_Participate",
+        "Research_Participate",
+        "Q22_6_Participate",
+        "Q22_7_Participate"
+      ],
+      "freq_keys": ["Yes"]
+    },
+    {
+      "question": "Satisfaction with the quality of the programs",
+      "type": "mean",
+      "sub_questions": [
+        "Internships_Quality",
+        "CBL_Quality",
+        "Study_away_Quality",
+        "Research_Quality",
+        "Q22_6_Quality",
+        "Q22_7_Quality"
+      ]
+    },
+    {
+      "question": "Satisfaction with the level of availability of the programs",
+      "type": "mean",
+      "sub_questions": [
+        "Internships_Availability",
+        "CBL_Availability",
+        "Study_away_Availability",
+        "Research_Availability",
+        "Q22_6_Availability",
+        "Q22_7_Availability"
+      ]
+    },
+    {
+      "question": "Please rate the following statements concerning your Dominican experience. As a result of my experience at Dominican University, I feel that...",
+      "type": "mean",
+      "sub_questions": [
+        "social_response",
+        "civic_engagement",
+        "research",
+        "spiritual_growth",
+        "Q43_3",
+        "Q43_6"
+      ]
+    },
+    {
+      "question": "Please rate your level of agreement with the following about Dominican",
+      "type": "mean",
+      "sub_questions": [
+        "intellect_stim",
+        "ethnic_diff",
+        "belonging",
+        "life_learn",
+        "concern"
+      ]
+    },
+    {
+      "question": "Please rate your level of agreement with the following about your OVERALL experience at Dominican",
+      "type": "mean",
+      "sub_questions": ["attend_again", "recommend_DU"]
+    },
+    {
+      "question": "Satisfaction with the quality of the programs",
+      "type": "freq",
+      "sub_questions": [
+        "clubs_Quality",
+        "rec_Quality",
+        "social_Quality",
+        "leadership_Quality",
+        "Q10_5_Quality"
+      ],
+      "freq_keys": ["Very Satisfied", "Somewhat Satisfied"]
+    },
+    {
+      "question": "Did you participate in the following types of experiential learning programs?",
+      "type": "freq",
+      "sub_questions": [
+        "Internships_Participate",
+        "Study_away_Participate",
+        "CBL_Participate",
+        "Research_Participate",
+        "Q22_6_Participate",
+        "Q22_7_Participate"
+      ],
+      "freq_keys": ["Yes"]
+    }
+  ],
+  "score_map": {
+    "Very Satisfied": 4,
+    "Somewhat Satisfied": 3,
+    "Somewhat Dissatisfied": 2,
+    "Very Dissatisfied": 1,
+    "To a great extent": 4,
+    "To some extent": 3,
+    "Very little": 2,
+    "Not at all": 1,
+    "Strongly Agree": 4,
+    "Somewhat Agree": 3,
+    "Somewhat Disagree": 2,
+    "Strongly Disagree": 1
+  }
+}
