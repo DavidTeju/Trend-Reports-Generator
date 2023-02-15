@@ -78,6 +78,24 @@ def freq_keys_to_string(freq_keys: list):
         return " or ".join(freq_keys)
 
 
+def run_for_section(section):
+    function_dict = {"freq": freq_frame_for_sub_question, "mean": mean_frame_for_sub_question}
+
+    section_frame = function_dict.get(section["type"], section_type_error)(section)
+
+    section_frame.name = section["question"]
+    return section_frame
+
+
+def main(sections):
+    sections_tables = [run_for_section(section) for section in sections]
+    with open("output.html", "w") as html:
+        for table in sections_tables:
+            print(table)
+            html.write(f"<h2>{table.name}</h2>")
+            html.write(table.to_html(bold_rows=False))
+
+
 full_data_frame = pd.read_csv("Graduating Student data/survey_data.csv")
 
 # Store MetaData
@@ -99,24 +117,5 @@ with open("config.json") as file:
     config = json.load(file)
     sections_config = config["section_config"]
     score_map: dict[str, int] = config["score_map"]
-
-
-def run_for_section(section):
-    function_dict = {"freq": freq_frame_for_sub_question, "mean": mean_frame_for_sub_question}
-
-    section_frame = function_dict.get(section["type"], section_type_error)(section)
-
-    section_frame.name = section["question"]
-    return section_frame
-
-
-def main(sections):
-    sections_tables = [run_for_section(section) for section in sections]
-    with open("output.html", "w") as html:
-        for table in sections_tables:
-            print(table)
-            html.write(f"<h2>{table.name}</h2>")
-            html.write(table.to_html(bold_rows=False))
-
 
 main(sections_config)
