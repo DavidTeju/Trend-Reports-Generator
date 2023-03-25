@@ -1,0 +1,10 @@
+{% extends "index.jinja" %}
+{% block body %}
+    <ul>
+        {% for config in configs %}
+            <li>
+                <a href="{{ url_for('confirm_config', config=config) }}">{{ config }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock body %}
