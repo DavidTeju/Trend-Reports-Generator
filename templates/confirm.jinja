@@ -1,26 +1,28 @@
 {% extends "index.jinja" %}
 {% block body %}
-    <h1>Confirm {{ config_name }}</h1>
-    <table>
-        <tr>
-            <th>Question</th>
-            <th>Type</th>
-        </tr>
-        {% for table in config['section_config'] %}
-            <tr>
-                <td>{{ table['question'] }}</td>
-                <td>{{ table['type'] }}</td>
-            </tr>
-        {% endfor %}
-    </table>
-    <button id="generate">Generate Report</button>
-    <button>Edit</button>
-    <script>
-	const config = {{ config|tojson }};
+	<h1>Confirm {{ config_name }}</h1>
+	<table>
+		<tr>
+			<th>Question</th>
+			<th>Type</th>
+		</tr>
+		{% for table in config['section_config'] %}
+			<tr>
+				<td>{{ table['question'] }}</td>
+				<td>{{ table['type'] }}</td>
+			</tr>
+		{% endfor %}
+	</table>
+	<button id="generate">Generate Report</button>
+	<a href="{{ url_for('create_config', config=config_name) }}">
+		<button>Edit</button>
+	</a>
+	<script>
+        const config = {{ config|tojson }};
 
-	const generateButton = document.getElementById("generate");
-	generateButton.addEventListener("click", () => {
-		window.open("/generate-report?config-string=" + JSON.stringify(config));
-	});
-    </script>
+        const generateButton = document.getElementById("generate");
+        generateButton.addEventListener("click", () => {
+            window.open("/generate-report?config-string=" + JSON.stringify(config));
+        });
+	</script>
 {% endblock body %}

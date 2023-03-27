@@ -1,0 +1,134 @@
+{% extends "index.jinja" %}
+{% block body %}
+	<h1>{{ title }}</h1>
+	<button id="add-table">Add New</button>
+	<div id="tables">
+
+	</div>
+
+	<script>
+        let index = 1;
+        const tables = {{ tables|tojson }};
+        tableDiv = document.getElementById('tables');
+
+        document.getElementById('add-table').addEventListener('click', () => {
+            addQuestion({});
+        })
+
+
+        function addQuestion(table) {
+            tableDiv.insertAdjacentHTML('beforeend', render_html(table))
+            addEventListeners()
+            index++;
+        }
+
+
+        function addEventListeners() {
+            const myIndex = index;
+            counters[index] = 1;
+
+            document.getElementById(`${myIndex}-add-subquestion`).onclick = function () {
+                const fieldset = document.getElementById(`${myIndex}-subquestions`);
+                const newInput = document.createElement("input");
+                newInput.type = "text";
+                newInput.name = `${myIndex}-${counters[myIndex]}-subquestion`;
+                newInput.id = `${myIndex}-${counters[myIndex]}-subquestion`;
+                counters[myIndex]++;
+
+                fieldset.appendChild(newInput);
+            };
+
+            let checkType = function () {
+                const freqKeys = document.getElementById(`${myIndex}-freq-keys`);
+                const filterDiv = document.getElementById(`${myIndex}-filter-div`);
+                if (document.getElementById(`${myIndex}-type`).value === "mean") {
+                    freqKeys.style.display = "none";
+                    filterDiv.style.display = "block";
+                } else {
+                    freqKeys.style.display = "block";
+                    filterDiv.style.display = "none";
+                }
+            };
+
+            document.getElementById(`${myIndex}-type`).onchange = checkType;
+
+            freq_key_counters[myIndex] = 2;
+            document.getElementById(`${myIndex}-add-freq-key`).onclick = function () {
+                const fieldset = document.getElementById(`${myIndex}-freq-keys`);
+                const newInput = document.createElement("input");
+                const and = document.createElement("span");
+                and.innerHTML = " and ";
+                newInput.type = "text";
+                newInput.name = `${myIndex}-${freq_key_counters[myIndex]}-freq-key`;
+                newInput.id = `${myIndex}-${freq_key_counters[myIndex]}-freq-key`;
+                freq_key_counters[myIndex]++;
+
+                fieldset.appendChild(and);
+                fieldset.appendChild(newInput);
+            };
+
+            checkType();
+        }
+
+
+        function render_html(table) {
+            return `
+	<fieldset id="${index}">
+	<legend>
+		Question ${index}
+	</legend>
+	<label for="${index}-question">Question</label>
+	<input type="text"
+		   id="${index}-question"
+		   name="question"
+		   value="${table['question'] ?? ''}"/>
+	<label for="${index}-type">Type</label>
+	<select id="${index}-type" name="type" value="${table['type']}">
+		<option value="freq">
+			Frequency
+		</option>
+		<option value="mean">
+			Mean
+		</option>
+	</select>
+	<fieldset id="${index}-subquestions">
+		<legend>
+			Subquestions:
+		</legend>
+		<button id="${index}-add-subquestion">Add New</button>
+	</fieldset>
+	<fieldset id="${index}-freq-keys">
+		<legend>
+			What would you like to find the frequency of? (Please input exact keywords)
+		</legend>
+		<button id="${index}-add-freq-key">Add New</button>
+		<input type="text" name="1-1-freq-key" id="1-1-freq-key"/>
+	</fieldset>
+	<div id="${index}-filter-div">
+		<label for="${index}-filter">Filter</label>
+		<select id="${index}-filter-type" name="filter-type">
+			<option value="<=">
+				Less than or Equals to
+			</option>
+			<option value=">=">
+				Greater than or Equals to
+			</option>
+			<option value="==">
+				Equals to
+			</option>
+		</select>
+		<input type="text"
+			   id="${index}-filter"
+			   name="filter"
+			   value="${table['filter'] ? table['filter'].slice(2) : ''}"/>
+	</div>
+</fieldset>
+	`
+        }
+
+        counters = [];
+        freq_key_counters = [];
+        for (let table of tables)
+            addQuestion(table);
+	</script>
+{% endblock %}

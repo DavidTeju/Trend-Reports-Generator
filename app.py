@@ -17,7 +17,21 @@ def start_page():
 def load_config():
     listdir = os.listdir("configs")
     listdir = [file[0:-5] for file in listdir if file.endswith(".json")]
+    print(listdir)
     return render_template("load-config.jinja", configs=listdir)
+
+
+@app.route("/create-config")
+@app.route("/edit-config")
+def create_config():
+    tables = 0
+    config_name = request.args.get("config") if "config" in request.args else None
+    if config_name is not None:
+        with open(f"configs/{config_name}.json") as json_file:
+            config = json.load(json_file)
+            tables = config["section_config"]
+            print(tables)
+    return render_template("enter-config.jinja", tables=tables or [], title=config_name or "New Config/Report")
 
 
 @app.route("/confirm-config")
@@ -41,21 +55,6 @@ def generate_tables():
         string += f"<h2>{table.name}</h2>\n{table.to_html(bold_rows=False)}\n"
 
     return render_template("any.html", content=string)
-
-
-@app.route("/test")
-def test():
-    return render_template("single-config.jinja", index=1, table={
-        "question": "Satisfaction with the quality of the programs",
-        "type": "mean",
-        "sub_questions": [
-            "clubs_Quality",
-            "rec_Quality",
-            "social_Quality",
-            "leadership_Quality",
-            "Q10_5_Quality"
-        ]
-    })
 
 
 if __name__ == "__main__":
