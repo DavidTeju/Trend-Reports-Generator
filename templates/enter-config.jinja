@@ -1,134 +1,257 @@
 {% extends "index.jinja" %}
 {% block body %}
 	<h1>{{ title }}</h1>
-	<button id="add-table">Add New</button>
 	<div id="tables">
 
 	</div>
+	<button id="add-table">Add New</button>
 
 	<script>
-        let index = 1;
+        // All defined indices start at 1
+        let questionIndex = 1;
         const tables = {{ tables|tojson }};
-        tableDiv = document.getElementById('tables');
+        const tableDiv = document.getElementById('tables');
+        const subQuestionCurrentIndices = [];
+        const freqKeyCurrentIndices = [];
 
-        document.getElementById('add-table').addEventListener('click', () => {
-            addQuestion({});
-        })
+        for (let eachTable of tables)
+            addQuestion(eachTable);
+
+        document.getElementById('add-table').addEventListener('click', addQuestion)
 
 
-        function addQuestion(table) {
-            tableDiv.insertAdjacentHTML('beforeend', render_html(table))
+        function addQuestion(table = null) {
+            tableDiv.append(renderTableHTML())
             addEventListeners()
-            index++;
+            if (table) {
+                populateSingleInputs(table)
+                populateSubquestions(table);
+                populateFreqKeys(table);
+            }
+            checkType(questionIndex);
+            questionIndex++;
         }
 
+        function populateSingleInputs(table) {
+            const filterInput = document.getElementById(`${questionIndex}-filter`);
+            const questionInput = document.getElementById(`${questionIndex}-question`);
+            const typeSelect = document.getElementById(`${questionIndex}-type`);
 
-        function addEventListeners() {
-            const myIndex = index;
-            counters[index] = 1;
+            filterInput.value = table['filter'] ?? '';
+            questionInput.value = table['question'] ?? '';
+            typeSelect.value = table['type'] ?? '';
+        }
 
-            document.getElementById(`${myIndex}-add-subquestion`).onclick = function () {
-                const fieldset = document.getElementById(`${myIndex}-subquestions`);
-                const newInput = document.createElement("input");
-                newInput.type = "text";
-                newInput.name = `${myIndex}-${counters[myIndex]}-subquestion`;
-                newInput.id = `${myIndex}-${counters[myIndex]}-subquestion`;
-                counters[myIndex]++;
+        function populateFreqKeys(table) {
+            const freqKeys = table['freq_keys'];
 
-                fieldset.appendChild(newInput);
-            };
-
-            let checkType = function () {
-                const freqKeys = document.getElementById(`${myIndex}-freq-keys`);
-                const filterDiv = document.getElementById(`${myIndex}-filter-div`);
-                if (document.getElementById(`${myIndex}-type`).value === "mean") {
-                    freqKeys.style.display = "none";
-                    filterDiv.style.display = "block";
-                } else {
-                    freqKeys.style.display = "block";
-                    filterDiv.style.display = "none";
+            // If there are freq keys, add the first one and then add the rest
+            // If there are no freq keys, then we need to add one empty one so that the user can add more
+            if (freqKeys) {
+                addFreqKey(questionIndex, true);
+                document.getElementById(`${questionIndex}-1-freq-key`).value = freqKeys[0];
+                for (let i = 1; i < freqKeys.length; i++) {
+                    addFreqKey(questionIndex);
+                    document.getElementById(`${questionIndex}-${i + 1}-freq-key`).value = freqKeys[i];
                 }
-            };
+            } else {
+                addFreqKey(questionIndex, true);
+            }
 
-            document.getElementById(`${myIndex}-type`).onchange = checkType;
+        }
 
-            freq_key_counters[myIndex] = 2;
-            document.getElementById(`${myIndex}-add-freq-key`).onclick = function () {
-                const fieldset = document.getElementById(`${myIndex}-freq-keys`);
-                const newInput = document.createElement("input");
+        function populateSubquestions(table) {
+            const subquestions = table['sub_questions'];
+
+            if (subquestions) {
+                for (let subquestion of subquestions) {
+                    addSubquestion(questionIndex);
+                    document.getElementById(`${questionIndex}-${subQuestionCurrentIndices[questionIndex] - 1}-subquestion`).value = subquestion;
+                }
+            }
+        }
+
+        function addSubquestion(questionIndexToAddTo) {
+            const subquestionsFieldSet = document.getElementById(`${questionIndexToAddTo}-subquestions`);
+            const newInput = document.createElement("input");
+            newInput.type = "text";
+            newInput.name = `${questionIndexToAddTo}-${subQuestionCurrentIndices[questionIndexToAddTo]}-subquestion`;
+            newInput.id = `${questionIndexToAddTo}-${subQuestionCurrentIndices[questionIndexToAddTo]}-subquestion`;
+            subQuestionCurrentIndices[questionIndexToAddTo]++;
+
+            subquestionsFieldSet.appendChild(newInput);
+        }
+
+        function addFreqKey(questionIndexToAddTo, excludeAnd = false) {
+            const fieldset = document.getElementById(`${questionIndexToAddTo}-freq-keys`);
+            const newInput = document.createElement("input");
+            newInput.type = "text";
+            newInput.name = `${questionIndexToAddTo}-${freqKeyCurrentIndices[questionIndexToAddTo]}-freq-key`;
+            newInput.id = `${questionIndexToAddTo}-${freqKeyCurrentIndices[questionIndexToAddTo]}-freq-key`;
+            freqKeyCurrentIndices[questionIndexToAddTo]++;
+
+            if (!excludeAnd) {
                 const and = document.createElement("span");
                 and.innerHTML = " and ";
-                newInput.type = "text";
-                newInput.name = `${myIndex}-${freq_key_counters[myIndex]}-freq-key`;
-                newInput.id = `${myIndex}-${freq_key_counters[myIndex]}-freq-key`;
-                freq_key_counters[myIndex]++;
-
                 fieldset.appendChild(and);
-                fieldset.appendChild(newInput);
-            };
+            }
+            fieldset.appendChild(newInput);
+        }
 
-            checkType();
+        function checkType(questionIndexToAddTo) {
+            const freqKeys = document.getElementById(`${questionIndexToAddTo}-freq-keys`);
+            const freqKeyInputs = freqKeys.getElementsByTagName("input");
+
+            const filterDiv = document.getElementById(`${questionIndexToAddTo}-filter-div`);
+            const filterDivInputs = filterDiv.getElementsByTagName("input");
+
+            if (document.getElementById(`${questionIndexToAddTo}-type`).value === "mean") {
+                freqKeys.style.display = "none";
+                for (let input of freqKeyInputs)
+                    input.disabled = true;
+
+                filterDiv.style.display = "block";
+                for (let input of filterDivInputs)
+                    input.disabled = false;
+            } else {
+                freqKeys.style.display = "block";
+                for (let input of freqKeyInputs)
+                    input.disabled = false;
+
+                filterDiv.style.display = "none";
+                for (let input of filterDivInputs)
+                    input.disabled = true;
+            }
         }
 
 
-        function render_html(table) {
-            return `
-	<fieldset id="${index}">
-	<legend>
-		Question ${index}
-	</legend>
-	<label for="${index}-question">Question</label>
-	<input type="text"
-		   id="${index}-question"
-		   name="question"
-		   value="${table['question'] ?? ''}"/>
-	<label for="${index}-type">Type</label>
-	<select id="${index}-type" name="type" value="${table['type']}">
-		<option value="freq">
-			Frequency
-		</option>
-		<option value="mean">
-			Mean
-		</option>
-	</select>
-	<fieldset id="${index}-subquestions">
-		<legend>
-			Subquestions:
-		</legend>
-		<button id="${index}-add-subquestion">Add New</button>
-	</fieldset>
-	<fieldset id="${index}-freq-keys">
-		<legend>
-			What would you like to find the frequency of? (Please input exact keywords)
-		</legend>
-		<button id="${index}-add-freq-key">Add New</button>
-		<input type="text" name="1-1-freq-key" id="1-1-freq-key"/>
-	</fieldset>
-	<div id="${index}-filter-div">
-		<label for="${index}-filter">Filter</label>
-		<select id="${index}-filter-type" name="filter-type">
-			<option value="<=">
-				Less than or Equals to
-			</option>
-			<option value=">=">
-				Greater than or Equals to
-			</option>
-			<option value="==">
-				Equals to
-			</option>
-		</select>
-		<input type="text"
-			   id="${index}-filter"
-			   name="filter"
-			   value="${table['filter'] ? table['filter'].slice(2) : ''}"/>
-	</div>
-</fieldset>
-	`
+        function addEventListeners(subQuestionIndexStart = 1, freqKeyIndexStart = 1) {
+            // We need to use a const here because the value of questionIndex will change when we add a new question
+            // This could affect the index used in the function if we don't use a separate variable
+            const questionIndexConst = questionIndex;
+
+            // Both of these are used to keep track of the current index of the subquestion and freq key inputs for each question
+            // This is so that we know what the next index should be when we add a new subquestion or freq key
+            subQuestionCurrentIndices[questionIndexConst] = subQuestionIndexStart;
+            freqKeyCurrentIndices[questionIndexConst] = freqKeyIndexStart;
+
+            document.getElementById(`${questionIndexConst}-type`).onchange = () => checkType(questionIndexConst);
+
+            document.getElementById(`${questionIndexConst}-add-subquestion`).onclick = () => addSubquestion(questionIndexConst);
+            document.getElementById(`${questionIndexConst}-add-freq-key`).onclick = () => addFreqKey(questionIndexConst);
+
+
         }
 
-        counters = [];
-        freq_key_counters = [];
-        for (let table of tables)
-            addQuestion(table);
+        /*
+        * Renders the HTML for a table
+        *
+        * @param {Object} table - The table object to render
+        * @returns {HTMLElement} - The HTML element for the question
+        */
+        function renderTableHTML() {
+            const parentFieldSet = document.createElement('fieldset');
+            parentFieldSet.id = questionIndex.toString();
+
+            const legend = document.createElement('legend');
+            legend.innerHTML = `Question ${questionIndex}`;
+            parentFieldSet.appendChild(legend);
+
+            const questionLabel = document.createElement('label');
+            questionLabel.for = `${questionIndex}-question`;
+            questionLabel.innerHTML = "Question";
+            parentFieldSet.appendChild(questionLabel);
+
+            const questionInput = document.createElement('input');
+            questionInput.type = "text";
+            questionInput.id = questionLabel.for;
+            questionInput.name = questionLabel.for;
+            parentFieldSet.appendChild(questionInput);
+
+            const typeLabel = document.createElement('label');
+            typeLabel.for = `${questionIndex}-type`;
+            typeLabel.innerHTML = "Type";
+            parentFieldSet.appendChild(typeLabel);
+
+            const typeSelect = document.createElement('select');
+            typeSelect.id = typeLabel.for;
+            typeSelect.name = typeLabel.for;
+            parentFieldSet.appendChild(typeSelect);
+
+            const freqOption = document.createElement('option');
+            freqOption.value = "freq";
+            freqOption.innerHTML = "Frequency";
+            typeSelect.appendChild(freqOption);
+
+            const meanOption = document.createElement('option');
+            meanOption.value = "mean";
+            meanOption.innerHTML = "Mean";
+            typeSelect.appendChild(meanOption);
+
+            const subquestionsFieldSet = document.createElement('fieldset');
+            subquestionsFieldSet.id = `${questionIndex}-subquestions`;
+            parentFieldSet.appendChild(subquestionsFieldSet);
+
+            const subquestionsLegend = document.createElement('legend');
+            subquestionsLegend.innerHTML = "Sub-question Keys (Please input exact keywords):";
+            subquestionsFieldSet.appendChild(subquestionsLegend);
+
+            const addSubquestionButton = document.createElement('button');
+            addSubquestionButton.id = `${questionIndex}-add-subquestion`;
+            addSubquestionButton.innerHTML = "Add New";
+            subquestionsFieldSet.appendChild(addSubquestionButton);
+
+            const freqKeysFieldSet = document.createElement('fieldset');
+            freqKeysFieldSet.id = `${questionIndex}-freq-keys`;
+            parentFieldSet.appendChild(freqKeysFieldSet);
+
+            const freqKeysLegend = document.createElement('legend');
+            freqKeysLegend.innerHTML = "What would you like to find the frequency of? (Please input exact keywords)";
+            freqKeysFieldSet.appendChild(freqKeysLegend);
+
+            const addFreqKeyButton = document.createElement('button');
+            addFreqKeyButton.id = `${questionIndex}-add-freq-key`;
+            addFreqKeyButton.innerHTML = "Add New";
+            freqKeysFieldSet.appendChild(addFreqKeyButton);
+
+            const filterDiv = document.createElement('div');
+            filterDiv.id = `${questionIndex}-filter-div`;
+            parentFieldSet.appendChild(filterDiv);
+
+            const filterLabel = document.createElement('label');
+            filterLabel.for = `${questionIndex}-filter`;
+            filterLabel.innerHTML = "Filter";
+            filterDiv.appendChild(filterLabel);
+
+            const filterSelect = document.createElement('select');
+            filterSelect.id = `${questionIndex}-filter-type`;
+            filterSelect.name = filterSelect.id;
+            filterDiv.appendChild(filterSelect);
+
+            const lessThanOption = document.createElement('option');
+            lessThanOption.value = "<=";
+            lessThanOption.innerHTML = "Less than or Equals to";
+            filterSelect.appendChild(lessThanOption);
+
+            const greaterThanOption = document.createElement('option');
+            greaterThanOption.value = ">=";
+            greaterThanOption.innerHTML = "Greater than or Equals to";
+            filterSelect.appendChild(greaterThanOption);
+
+            const equalToOption = document.createElement('option');
+            equalToOption.value = "==";
+            equalToOption.innerHTML = "Equals to";
+            filterSelect.appendChild(equalToOption);
+
+            const filterInput = document.createElement('input');
+            filterInput.type = "text";
+            filterInput.name = filterLabel.for;
+            filterInput.id = filterLabel.for;
+            filterDiv.appendChild(filterInput);
+
+            return parentFieldSet;
+        }
+
+
 	</script>
 {% endblock %}

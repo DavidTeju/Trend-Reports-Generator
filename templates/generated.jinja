@@ -1,7 +1,7 @@
 {% extends "index.jinja" %}
 {% block body %}
-    {% for table in dict %}
-        <h2>{{ table }}</h2>
-        {{ dict[table]|safe }}
-    {% endfor %}
+	{% for key, value in tables.items() %}
+		<h2>{{ key }}</h2>
+		{{ value|safe }}
+	{% endfor %}
 {% endblock body %}
