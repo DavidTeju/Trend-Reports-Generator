@@ -1,28 +1,61 @@
 {% extends "index.jinja" %}
 {% block body %}
-	<h1>Confirm {{ config_name }}</h1>
-	<table>
-		<tr>
-			<th>Question</th>
-			<th>Type</th>
-		</tr>
-		{% for table in config['section_config'] %}
-			<tr>
-				<td>{{ table['question'] }}</td>
-				<td>{{ table['type'] }}</td>
-			</tr>
-		{% endfor %}
-	</table>
-	<button id="generate">Generate Report</button>
-	<a href="{{ url_for('create_config', config=config_name) }}">
-		<button>Edit</button>
-	</a>
-	<script>
-        const config = {{ config|tojson }};
+    <h1>Confirm {{ config_name }}</h1>
+    <table class="table">
+        <tr>
+            <th>Question</th>
+            <th>Type</th>
+        </tr>
+        {% for table in config['section_config'] %}
+            <tr>
+                <td>{{ table['question'] }}</td>
+                <td>{{ table['type'] }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    <button id="generate" class="btn btn-outline-primary">Generate Report</button>
+    {% if is_new %}
+        {#		<a href="{{ url_for('save_config', config=config) }}">#}
+        <button id="save" class="btn btn-outline-success">Save</button>
+        {#		</a>#}
+    {% else %}
+        <a href="{{ url_for('create_config', config=config_name) }}">
+            <button class="btn btn-outline-primary">Edit</button>
+        </a>
+    {% endif %}
+    <script>
+        const config = JSON.parse(`{{ config|tojson }}`);
 
         const generateButton = document.getElementById("generate");
         generateButton.addEventListener("click", () => {
             window.open("/generate-report?config-string=" + JSON.stringify(config));
+            // TODO: Move query string to POST body
         });
-	</script>
+
+        const saveButton = document.getElementById("save");
+        saveButton.addEventListener("click", () => {
+            // Send a POST request to the server with the config and the name of the config. You get the name by prompting the user.
+            const config_name = prompt("Enter the name of the config", "untitled")
+            fetch("{{ url_for('save_config') }}", {
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                method: "POST",
+                body: JSON.stringify({
+                    config_name: config_name,
+                    config: config
+                })
+            }).then(response => {
+                if (response.status === 200) {
+                    // Add a p tag to the dom saying success!!
+                    const p = document.createElement("p");
+                    p.innerText = `Successfully saved ${config_name}`;
+                    p.style.color = "green";
+                    document.body.appendChild(p);
+                } else {
+                    alert("Error saving");
+                }
+            });
+        })
+    </script>
 {% endblock body %}

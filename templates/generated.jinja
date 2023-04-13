@@ -1,7 +1,19 @@
 {% extends "index.jinja" %}
 {% block body %}
-	{% for key, value in tables.items() %}
-		<h2>{{ key }}</h2>
-		{{ value|safe }}
-	{% endfor %}
+    {% for key, value in tables.items() %}
+        <h2>{{ key }}</h2>
+        {{ value|safe }}
+    {% endfor %}
+    <script>
+        const addClass = () => {
+            document.querySelectorAll("table.dataframe").forEach((table) => {
+                table.classList.add("table");
+            });
+        }
+        if (document.readyState !== 'loading') {
+            addClass();
+        } else {
+            document.addEventListener('DOMContentLoaded', addClass);
+        }
+    </script>
 {% endblock body %}

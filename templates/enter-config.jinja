@@ -1,15 +1,22 @@
 {% extends "index.jinja" %}
 {% block body %}
-	<h1>{{ title }}</h1>
-	<div id="tables">
+    <h1>{{ title }}</h1>
+    <form id="tables" action="{{ url_for('process_form') }}" method="post">
+        <input type="submit" class="btn btn-primary ">
+        <fieldset id="score-maps">
+            <legend> Text Values</legend>
+        </fieldset>
+    </form>
+    <button id="add-table" class="btn btn-primary">Add New Question</button>
 
-	</div>
-	<button id="add-table">Add New</button>
+    <button id="add-score-map" class="btn btn-primary"> Add New Text Value</button>
 
-	<script>
+
+    <script>
         // All defined indices start at 1
         let questionIndex = 1;
-        const tables = {{ tables|tojson }};
+        const config = JSON.parse(`{{ config|tojson }}`);
+        const tables = config["section_config"] ?? [];
         const tableDiv = document.getElementById('tables');
         const subQuestionCurrentIndices = [];
         const freqKeyCurrentIndices = [];
@@ -17,8 +24,42 @@
         for (let eachTable of tables)
             addQuestion(eachTable);
 
-        document.getElementById('add-table').addEventListener('click', addQuestion)
+        populateScoreMap(config['score_map']);
 
+        document.getElementById('add-table').addEventListener('click', () => addQuestion(null))
+        document.getElementById('add-score-map').addEventListener('click', () => addScoreMap())
+
+        function addScoreMap(text = null, value = null) {
+            const scoreMapsFieldSet = document.getElementById('score-maps');
+            const singleScoreMapDiv = document.createElement("div");
+            singleScoreMapDiv.classList.add("score-map");
+
+            const scoreName = document.createElement("input");
+            scoreName.placeholder = "Text";
+            scoreName.type = "text";
+
+            const forLabel = document.createElement("span");
+            forLabel.innerHTML = " for ";
+
+            const score = document.createElement("input");
+            score.placeholder = "Value";
+            score.type = "text";
+
+            if (text && value) {
+                scoreName.value = text;
+                score.value = value;
+            }
+
+            score.name = scoreName.value
+            scoreName.oninput = () => score.name = scoreName.value;
+
+
+            singleScoreMapDiv.appendChild(scoreName);
+            singleScoreMapDiv.appendChild(forLabel);
+            singleScoreMapDiv.appendChild(score);
+
+            scoreMapsFieldSet.appendChild(singleScoreMapDiv);
+        }
 
         function addQuestion(table = null) {
             tableDiv.append(renderTableHTML())
@@ -27,17 +68,30 @@
                 populateSingleInputs(table)
                 populateSubquestions(table);
                 populateFreqKeys(table);
-            }
+            } else addFreqKey(questionIndex, true)
             checkType(questionIndex);
             questionIndex++;
         }
 
+        /**
+         * Populates the filter, question, and type inputs for a table
+         *
+         * @param table - The table object to populate the inputs with
+         */
         function populateSingleInputs(table) {
+            const filterSelect = document.getElementById(`${questionIndex}-filter-type`);
             const filterInput = document.getElementById(`${questionIndex}-filter`);
             const questionInput = document.getElementById(`${questionIndex}-question`);
             const typeSelect = document.getElementById(`${questionIndex}-type`);
 
-            filterInput.value = table['filter'] ?? '';
+            if (table['filter']) {
+                const filter = table['filter'].split(' ');
+                filterSelect.value = filter[0];
+                filterInput.value = filter[1];
+            } else {
+                filterSelect.value = '';
+                filterInput.value = '';
+            }
             questionInput.value = table['question'] ?? '';
             typeSelect.value = table['type'] ?? '';
         }
@@ -49,15 +103,23 @@
             // If there are no freq keys, then we need to add one empty one so that the user can add more
             if (freqKeys) {
                 addFreqKey(questionIndex, true);
-                document.getElementById(`${questionIndex}-1-freq-key`).value = freqKeys[0];
+                document.getElementById(`${questionIndex}-1-freq_key`).value = freqKeys[0];
                 for (let i = 1; i < freqKeys.length; i++) {
                     addFreqKey(questionIndex);
-                    document.getElementById(`${questionIndex}-${i + 1}-freq-key`).value = freqKeys[i];
+                    document.getElementById(`${questionIndex}-${i + 1}-freq_key`).value = freqKeys[i];
                 }
             } else {
                 addFreqKey(questionIndex, true);
             }
 
+        }
+
+        function populateScoreMap(map_data) {
+            if (map_data) {
+                for (let score in map_data) {
+                    addScoreMap(score, map_data[score]);
+                }
+            }
         }
 
         function populateSubquestions(table) {
@@ -66,28 +128,28 @@
             if (subquestions) {
                 for (let subquestion of subquestions) {
                     addSubquestion(questionIndex);
-                    document.getElementById(`${questionIndex}-${subQuestionCurrentIndices[questionIndex] - 1}-subquestion`).value = subquestion;
+                    document.getElementById(`${questionIndex}-${subQuestionCurrentIndices[questionIndex] - 1}-sub_question`).value = subquestion;
                 }
             }
         }
 
         function addSubquestion(questionIndexToAddTo) {
-            const subquestionsFieldSet = document.getElementById(`${questionIndexToAddTo}-subquestions`);
+            const subquestionsFieldSet = document.getElementById(`${questionIndexToAddTo}-sub_questions`);
             const newInput = document.createElement("input");
             newInput.type = "text";
-            newInput.name = `${questionIndexToAddTo}-${subQuestionCurrentIndices[questionIndexToAddTo]}-subquestion`;
-            newInput.id = `${questionIndexToAddTo}-${subQuestionCurrentIndices[questionIndexToAddTo]}-subquestion`;
+            newInput.name = `${questionIndexToAddTo}-${subQuestionCurrentIndices[questionIndexToAddTo]}-sub_question`;
+            newInput.id = `${questionIndexToAddTo}-${subQuestionCurrentIndices[questionIndexToAddTo]}-sub_question`;
             subQuestionCurrentIndices[questionIndexToAddTo]++;
 
             subquestionsFieldSet.appendChild(newInput);
         }
 
         function addFreqKey(questionIndexToAddTo, excludeAnd = false) {
-            const fieldset = document.getElementById(`${questionIndexToAddTo}-freq-keys`);
+            const fieldset = document.getElementById(`${questionIndexToAddTo}-freq_keys`);
             const newInput = document.createElement("input");
             newInput.type = "text";
-            newInput.name = `${questionIndexToAddTo}-${freqKeyCurrentIndices[questionIndexToAddTo]}-freq-key`;
-            newInput.id = `${questionIndexToAddTo}-${freqKeyCurrentIndices[questionIndexToAddTo]}-freq-key`;
+            newInput.name = `${questionIndexToAddTo}-${freqKeyCurrentIndices[questionIndexToAddTo]}-freq_key`;
+            newInput.id = `${questionIndexToAddTo}-${freqKeyCurrentIndices[questionIndexToAddTo]}-freq_key`;
             freqKeyCurrentIndices[questionIndexToAddTo]++;
 
             if (!excludeAnd) {
@@ -99,7 +161,7 @@
         }
 
         function checkType(questionIndexToAddTo) {
-            const freqKeys = document.getElementById(`${questionIndexToAddTo}-freq-keys`);
+            const freqKeys = document.getElementById(`${questionIndexToAddTo}-freq_keys`);
             const freqKeyInputs = freqKeys.getElementsByTagName("input");
 
             const filterDiv = document.getElementById(`${questionIndexToAddTo}-filter-div`);
@@ -138,9 +200,16 @@
             document.getElementById(`${questionIndexConst}-type`).onchange = () => checkType(questionIndexConst);
 
             document.getElementById(`${questionIndexConst}-add-subquestion`).onclick = () => addSubquestion(questionIndexConst);
-            document.getElementById(`${questionIndexConst}-add-freq-key`).onclick = () => addFreqKey(questionIndexConst);
+            document.getElementById(`${questionIndexConst}-add-freq_key`).onclick = () => addFreqKey(questionIndexConst);
 
 
+        }
+
+        function keywordWarning(parent) {
+            const warning = document.createElement('div');
+            warning.innerHTML = "Please input exact keywords";
+            warning.classList.add("form-text");
+            parent.appendChild(warning);
         }
 
         /*
@@ -189,29 +258,39 @@
             typeSelect.appendChild(meanOption);
 
             const subquestionsFieldSet = document.createElement('fieldset');
-            subquestionsFieldSet.id = `${questionIndex}-subquestions`;
+            subquestionsFieldSet.id = `${questionIndex}-sub_questions`;
             parentFieldSet.appendChild(subquestionsFieldSet);
 
             const subquestionsLegend = document.createElement('legend');
-            subquestionsLegend.innerHTML = "Sub-question Keys (Please input exact keywords):";
+            subquestionsLegend.innerHTML = "Sub-question Keys:";
             subquestionsFieldSet.appendChild(subquestionsLegend);
+            keywordWarning(subquestionsFieldSet);
 
             const addSubquestionButton = document.createElement('button');
+            addSubquestionButton.classList.add("btn");
+            addSubquestionButton.classList.add("btn-primary");
+            addSubquestionButton.classList.add("btn-sm")
             addSubquestionButton.id = `${questionIndex}-add-subquestion`;
-            addSubquestionButton.innerHTML = "Add New";
+            addSubquestionButton.type = "button";
+            addSubquestionButton.innerHTML = "Add New Subquestion";
             subquestionsFieldSet.appendChild(addSubquestionButton);
 
             const freqKeysFieldSet = document.createElement('fieldset');
-            freqKeysFieldSet.id = `${questionIndex}-freq-keys`;
+            freqKeysFieldSet.id = `${questionIndex}-freq_keys`;
             parentFieldSet.appendChild(freqKeysFieldSet);
 
             const freqKeysLegend = document.createElement('legend');
-            freqKeysLegend.innerHTML = "What would you like to find the frequency of? (Please input exact keywords)";
+            freqKeysLegend.innerHTML = "What would you like to find the frequency of?";
             freqKeysFieldSet.appendChild(freqKeysLegend);
+            keywordWarning(freqKeysFieldSet);
 
             const addFreqKeyButton = document.createElement('button');
-            addFreqKeyButton.id = `${questionIndex}-add-freq-key`;
-            addFreqKeyButton.innerHTML = "Add New";
+            addFreqKeyButton.classList.add("btn");
+            addFreqKeyButton.classList.add("btn-primary");
+            addFreqKeyButton.classList.add("btn-sm")
+            addFreqKeyButton.id = `${questionIndex}-add-freq_key`;
+            addFreqKeyButton.type = "button";
+            addFreqKeyButton.innerHTML = "Add New Frequency Key";
             freqKeysFieldSet.appendChild(addFreqKeyButton);
 
             const filterDiv = document.createElement('div');
@@ -245,13 +324,12 @@
 
             const filterInput = document.createElement('input');
             filterInput.type = "text";
+            filterInput.placeholder = "A number goes here";
             filterInput.name = filterLabel.for;
             filterInput.id = filterLabel.for;
             filterDiv.appendChild(filterInput);
 
             return parentFieldSet;
         }
-
-
-	</script>
+    </script>
 {% endblock %}
