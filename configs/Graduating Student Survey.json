@@ -160,7 +160,7 @@
       "type": "mean"
     },
     {
-      "filter": ">=12000",
+      "filter": ">= 12000",
       "question": "What will be your annual SALARY (in thousands)",
       "sub_questions": ["Q28"],
       "type": "mean"
