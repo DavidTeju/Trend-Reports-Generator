@@ -62,12 +62,14 @@ def confirm_config(config: dict[str, list | int] = None):
 
 @app.route("/generate-report")
 def generate_tables():
-    config = request.args.get("config-string")
-    config = json.loads(config)
+    config_str = request.args.get("config-string")
 
-    TableGenerator.configure_generator(config)
+    TableGenerator.configure_generator(config_str)
     tables = TableGenerator.generate_tables()
-    rendered_tables = {table.name: table.to_html(bold_rows=False) for table in tables}
+
+    to_html = lambda x: x.to_html(bold_rows=False).replace('<tr style="text-align: right;">', "<tr>")
+
+    rendered_tables = {table.name: to_html(table) for table in tables}
 
     return render_template("generated.jinja", tables=rendered_tables)
 

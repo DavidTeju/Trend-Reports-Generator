@@ -1,3 +1,4 @@
+import json
 import re
 from datetime import datetime
 import pandas as pd
@@ -13,15 +14,19 @@ class TableGenerator:
     meta_data: list[str]
 
     @classmethod
-    def configure_generator(cls, config):
-        cls.full_data_frame = pd.read_csv(f"data/{config['datasource']}")
+    def configure_generator(cls, config_str: str):
+        config = json.loads(config_str.lower())
+        to_lower_if_string = lambda s: s.lower() if type(s) == str else s
+        cls.full_data_frame = pd.read_csv(f"data/{config['datasource']}"
+                                          ).applymap(to_lower_if_string)
+        cls.full_data_frame.columns = cls.full_data_frame.columns.map(to_lower_if_string)
 
         # Store MetaData and drop from table
         cls.full_questions, cls.meta_data = cls.full_data_frame.loc[0:1].values.tolist()
         cls.full_data_frame = cls.full_data_frame.drop([0, 1])
 
         # transform string dates to datetime dates
-        cls.full_data_frame["RecordedDate"] = pd.to_datetime(cls.full_data_frame["RecordedDate"],
+        cls.full_data_frame["recordeddate"] = pd.to_datetime(cls.full_data_frame["recordeddate"],
                                                              format="%Y-%m-%d %H:%M:%S")
 
         current_year = datetime.now().year
@@ -56,7 +61,7 @@ class TableGenerator:
                 return [True for _ in x]
 
         def convert_to_score(value):
-            return float(value) if isNum(value) else cls.score_map.get(value)
+            return float(value) if isNum(value) else cls.score_map.get(value.lower())
 
         def get_mean_values_for_sub_question(year_values, question_export_tag):
             return year_values[question_export_tag].map(convert_to_score).where(passes_filter).mean()
@@ -67,7 +72,7 @@ class TableGenerator:
 
         all_vals = {year: get_mean_values_for_year(year) for year in cls.years}
         to_return = pd.DataFrame(all_vals,
-                                 index=[cls.get_question(question_export_tag) for question_export_tag in
+                                 index=[cls.get_question(question_export_tag.lower()) for question_export_tag in
                                         question_export_tags]).round(2)
         to_return.columns.name = "Question"
 
@@ -82,8 +87,8 @@ class TableGenerator:
 
     @classmethod
     def freq_frame_for_sub_question(cls, table):
-        table_data = [cls.freq_for_sub_question(question_export_tag, table["freq_keys"]) for question_export_tag in
-                      table["sub_questions"]]
+        table_data = [cls.freq_for_sub_question(question_export_tag.lower(), table["freq_keys"]) for question_export_tag
+                      in table["sub_questions"]]
         table_frame: pd.DataFrame = pd.concat(table_data)
         table_frame.columns.names = [None, "Question"]
         return table_frame
@@ -127,8 +132,8 @@ class TableGenerator:
 
     @staticmethod
     def in_year(dataframe, year):
-        return (pd.to_datetime(f"{year}-08-01") <= dataframe["RecordedDate"]) & (
-                dataframe["RecordedDate"] <= pd.to_datetime(f"{year + 1}-06-01"))
+        return (pd.to_datetime(f"{year}-08-01") <= dataframe["recordeddate"]) & (
+                dataframe["recordeddate"] <= pd.to_datetime(f"{year + 1}-06-01"))
 
 
 def isNum(v):
