@@ -18,9 +18,11 @@
         {#		<a href="{{ url_for('save_config', config=config) }}">#}
         <button id="save" class="btn btn-outline-success">Save</button>
         {#		</a>#}
+        <p class="alert alert-success fade show" id="success" hidden="hidden" style="margin: 1em 0">
+        </p>
     {% else %}
-        <a href="{{ url_for('create_config', config=config_name) }}">
-            <button class="btn btn-outline-primary">Edit</button>
+        <a href="{{ url_for('create_config', config=config_name) }}" class="btn btn-outline-primary" role="button">
+            Edit
         </a>
     {% endif %}
     <script>
@@ -33,29 +35,30 @@
         });
 
         const saveButton = document.getElementById("save");
-        saveButton.addEventListener("click", () => {
-            // Send a POST request to the server with the config and the name of the config. You get the name by prompting the user.
-            const config_name = prompt("Enter the name of the config", "untitled")
-            fetch("{{ url_for('save_config') }}", {
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                method: "POST",
-                body: JSON.stringify({
-                    config_name: config_name,
-                    config: config
-                })
-            }).then(response => {
-                if (response.status === 200) {
-                    // Add a p tag to the dom saying success!!
-                    const p = document.createElement("p");
-                    p.innerText = `Successfully saved ${config_name}`;
-                    p.style.color = "green";
-                    document.body.appendChild(p);
-                } else {
-                    alert("Error saving");
-                }
-            });
-        })
+        if (saveButton)
+            saveButton.addEventListener("click", () => {
+                // Send a POST request to the server with the config and the name of the config. You get the name by prompting the user.
+                const config_name = prompt("Enter the name of the config", "untitled")
+                fetch("{{ url_for('save_config') }}", {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    method: "POST",
+                    body: JSON.stringify({
+                        config_name: config_name,
+                        config: config
+                    })
+                }).then(response => {
+                    if (response.status === 200) {
+                        // Add a p tag to the dom saying success!!
+                        const p = document.getElementById("success");
+                        p.textContent = `Successfully saved "${config_name}"`;
+                        {#p.style.color = "green";#}
+                        p.hidden = false;
+                    } else {
+                        alert("Error saving");
+                    }
+                });
+            })
     </script>
 {% endblock body %}

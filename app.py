@@ -10,6 +10,7 @@ app = Flask(__name__, template_folder="templates")
 
 
 # TODO: Replace query parameters with POST requests or path parameters
+# TODO: add x buttons to remove questions or subquestions
 
 
 @app.route("/")
@@ -42,9 +43,10 @@ def create_config():
     if config_name is not None:
         with open(f"configs/{config_name}.json") as json_file:
             config = json.load(json_file)
-            print(config)
-            print(config["score_map"])
-    return render_template("enter-config.jinja", config=config or {}, title=config_name or "New Config/Report")
+
+    datasources = [file for file in os.listdir("data") if file.endswith(".csv")]
+    return render_template("enter-config.jinja", config=config or {}, title=config_name or "New Config/Report",
+                           datasources=datasources)
 
 
 @app.route("/confirm-config")
@@ -73,12 +75,16 @@ def generate_tables():
 def config_form_to_json(form_data: dict[str, str]):
     tables: defaultdict[str, int | dict[str, str | list]] = defaultdict(lambda: defaultdict(list))
     score_map = {}
-    new_config = {"section_config": [], "score_map": score_map}
+    new_config = {"section_config": [],
+                  "score_map": score_map,
+                  "datasource": form_data["datasource"]}
 
     for key, value in form_data.items():
         key = key.replace("filter-type", "filterType")
         split_key = key.split("-")
         if len(split_key) == 1:
+            if key == "datasource":
+                continue
             score_map[key] = int(value)
         elif len(split_key) == 2:
             i, key = split_key

@@ -2,14 +2,27 @@
 {% block body %}
     <h1>{{ title }}</h1>
     <form id="tables" action="{{ url_for('process_form') }}" method="post">
-        <input type="submit" class="btn btn-primary ">
+        <div class="form-top">
+            <input type="submit" class="btn btn-primary ">
+            <div>
+                <label for="datasource">Data Source:</label>
+                <select id="datasource" name="datasource" class="form-select">
+                    {% for each in datasources %}
+                        <option value="{{ each }}">{{ each }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
         <fieldset id="score-maps">
             <legend> Text Values</legend>
         </fieldset>
     </form>
-    <button id="add-table" class="btn btn-primary">Add New Question</button>
+    <div class="form-bottom">
+        <button id="add-table" class="btn btn-primary">Add New Question</button>
+        <button id="add-score-map" class="btn btn-primary"> Add New Text Value</button>
+    </div>
 
-    <button id="add-score-map" class="btn btn-primary"> Add New Text Value</button>
 
 
     <script>
@@ -20,6 +33,9 @@
         const tableDiv = document.getElementById('tables');
         const subQuestionCurrentIndices = [];
         const freqKeyCurrentIndices = [];
+
+        const datasourceInput = document.getElementById('datasource');
+        datasourceInput.value = config['datasource'] ?? '';
 
         for (let eachTable of tables)
             addQuestion(eachTable);

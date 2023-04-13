@@ -14,7 +14,7 @@ class TableGenerator:
 
     @classmethod
     def configure_generator(cls, config):
-        cls.full_data_frame = pd.read_csv("Graduating Student data/survey_data.csv")
+        cls.full_data_frame = pd.read_csv(f"data/{config['datasource']}")
 
         # Store MetaData and drop from table
         cls.full_questions, cls.meta_data = cls.full_data_frame.loc[0:1].values.tolist()
