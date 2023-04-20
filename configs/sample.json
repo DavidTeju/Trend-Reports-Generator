@@ -1,0 +1,61 @@
+{
+  "datasource": "sample_data.csv",
+  "section_config": [
+    {
+      "type": "mean",
+      "question": "Average satisfaction",
+      "sub_questions": [
+        "q1_satisfaction",
+        "q2_environment",
+        "q3_facilities",
+        "q4_staff",
+        "q5_value"
+      ]
+    },
+    {
+      "type": "freq",
+      "question": "Participation in clubs",
+      "sub_questions": [
+        "q6_clubs"
+      ],
+      "freq_keys": [
+        "yes"
+      ]
+    },
+    {
+      "type": "mean",
+      "question": "Average importance",
+      "sub_questions": [
+        "q7_importance",
+        "q8_convenience",
+        "q9_location"
+      ],
+      "filter": "!= 'not applicable'"
+    },
+    {
+      "type": "freq",
+      "question": "Online course preferences",
+      "sub_questions": [
+        "q10_online"
+      ],
+      "freq_keys": [
+        "yes"
+      ]
+    },
+    {
+      "type": "mean",
+      "question": "Recommendation likelihood",
+      "sub_questions": [
+        "q11_recommend"
+      ]
+    }
+  ],
+  "score_map": {
+    "strongly agree": 5,
+    "agree": 4,
+    "neutral": 3,
+    "disagree": 2,
+    "strongly disagree": 1,
+    "not applicable": 0
+  }
+}
