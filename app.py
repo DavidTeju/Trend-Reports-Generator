@@ -51,13 +51,13 @@ def create_config():
 
 @app.route("/confirm-config")
 def confirm_config(config: dict[str, list | int] = None):
-    if config is None:
-        config_name = request.args.get("config")
-        with open(f"configs/{config_name}.json") as json_file:
-            config = json.load(json_file)
-            return render_template("confirm.jinja", config_name=config_name, config=config)
-    else:
+    if config is not None:
         return render_template("confirm.jinja", config_name="Unsaved Config", config=config, is_new=True)
+        
+    config_name = request.args.get("config")
+    with open(f"configs/{config_name}.json") as json_file:
+        config = json.load(json_file)
+        return render_template("confirm.jinja", config_name=config_name, config=config)
 
 
 @app.route("/generate-report")
@@ -93,7 +93,7 @@ def config_form_to_json(form_data: dict[str, str]):
             if "filter" in key:  # If this value is a filter, we need to add the filter type to the value
                 if key == "filter":  # Ignore the filter type during iteration because it's already added to filter
                     if value := value.strip():
-                        tables[i][key] = form_data[f"{i}-filter-type"] + " " + value
+                        tables[i][key] = f'{form_data[f"{i}-filter-type"]} {value}'
                 continue
             tables[i][key] = value
         elif len(split_key) == 3:
