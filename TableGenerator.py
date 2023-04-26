@@ -5,7 +5,26 @@ import pandas as pd
 
 
 class TableGenerator:
-    def __init__(self, config_str: str):
+    """
+    A class to generate tables based on a given configuration.
+
+    Attributes:
+        full_data_frame (pd.DataFrame): A DataFrame containing the full dataset.
+        full_questions (list): A list of full question texts.
+        meta_data (list): A list of meta data.
+        years (list): A list of years to filter data.
+        by_year (dict): A dictionary containing DataFrames filtered by year.
+        tables_config (list): A list of table configurations.
+        score_map (dict): A mapping of scores to their corresponding values.
+    """
+
+    def __init__(self, config_str):
+        """
+        Initialize the TableGenerator with a configuration string.
+
+        Args:
+            config_str (str): JSON configuration string containing settings for data processing and table generation.
+        """
         config = json.loads(config_str.lower())
         to_lower_if_string = lambda s: s.lower() if type(s) == str else s
         self.full_data_frame = pd.read_csv(f"data/{config['datasource']}").applymap(
@@ -37,6 +56,19 @@ class TableGenerator:
         self.score_map = config["score_map"]
 
     def generate_table(self, table):
+        """
+        Generates a table based on the given table configuration.
+
+        Parameters
+        -----------
+        table : dict
+            A dictionary containing the configuration for the table to be generated.
+
+        Returns
+        --------
+        table_frame : pd.DataFrame
+            The generated table as a pandas DataFrame.
+        """
         function_dict = {
             "freq": self.freq_frame_for_sub_question,
             "mean": self.mean_frame_for_sub_question,
@@ -48,9 +80,30 @@ class TableGenerator:
         return table_frame
 
     def generate_tables(self):
+        """
+        Generates all the tables as specified in the tables_config.
+
+        Returns
+        --------
+        list
+            A list of generated tables as pandas DataFrames.
+        """
         return [self.generate_table(table) for table in self.tables_config]
 
     def mean_frame_for_sub_question(self, table) -> pd.DataFrame:
+        """
+        Generates a mean frame for the given sub-question table configuration.
+
+        Parameters
+        -----------
+        table : dict
+            A dictionary containing the configuration for the sub-question table.
+
+        Returns
+        --------
+        pd.DataFrame
+            The generated mean frame as a pandas DataFrame.
+        """
         question_export_tags = table["sub_questions"]
 
         def passes_filter(x):
@@ -101,6 +154,19 @@ class TableGenerator:
         return to_return
 
     def get_question(self, tag):
+        """
+        Retrieves the full question text for the given question export tag.
+
+        Parameters
+        -----------
+        tag : str
+            The question export tag.
+
+        Returns
+        --------
+        str
+            The full question text.
+        """
         try:
             full_question = self.full_questions[self.full_data_frame.columns.get_loc(tag)]
         except KeyError:
@@ -116,6 +182,19 @@ class TableGenerator:
         ].strip()  # Split and get last member as that should be the relevant title
 
     def freq_frame_for_sub_question(self, table):
+        """
+        Generates a frequency frame for the given sub-question table configuration.
+
+        Parameters
+        -----------
+        table : dict
+            A dictionary containing the configuration for the sub-question table.
+
+        Returns
+        --------
+        pd.DataFrame
+            The generated frequency frame as a DataFrame.
+        """
         table_data = [
             self.freq_for_sub_question(question_export_tag.lower(), table["freq_keys"])
             for question_export_tag in table["sub_questions"]
@@ -125,6 +204,17 @@ class TableGenerator:
         return table_frame
 
     def value_frequency_from_name_by_year(self, year, name):
+        """
+         Compute the frequency and percentage of values for the given freq_key in the specified year.
+
+         Args:
+             year (int): The year for which to compute the frequencies.
+             name (str): The keyword for which to count the frequency.
+
+         Returns:
+             pd.DataFrame: A DataFrame containing the frequency and percentage of values for the given freq_key.
+         """
+
         percent_multiplier = 100
         frame_of_frequencies = self.by_year[year][name].value_counts().to_frame()
         frame_of_frequency_rates = (
@@ -140,7 +230,18 @@ class TableGenerator:
 
         return combined_frame
 
-    def freq_for_sub_question(self, question_export_tag: str, freq_keys: list[str]):
+    def freq_for_sub_question(self, question_export_tag, freq_keys):
+        """
+        Generate a DataFrame containing the frequency data for the given sub_question and frequency keys.
+
+        Args:
+            question_export_tag (str): The tag associated with the sub_question.
+            freq_keys (list[str]): A list of frequency keys.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing the frequency data for the given sub_question and frequency keys.
+        """
+
         def key_frequency_values_in_year(year):
             frequency_values = self.value_frequency_from_name_by_year(
                 year, question_export_tag
@@ -173,7 +274,8 @@ class TableGenerator:
         return frequencies_by_year
 
     @staticmethod
-    def freq_keys_to_string(freq_keys: list):
+    def freq_keys_to_string(freq_keys: list[str]):
+        """Convert a list of frequency keys to a string representation."""
         return freq_keys[0] if len(freq_keys) == 1 else " or ".join(freq_keys)
 
     @staticmethod
