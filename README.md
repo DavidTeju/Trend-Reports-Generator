@@ -1,7 +1,7 @@
 Survey Trend Reports Generator
 ======================================
 
-This is a trend reports generator primarily designed for generating trend reports on my school's graduating student survey data from Qualtrics. However, it is configurable and can work with any type of data, especially survey data. I have included a sample config and sample data so you can test it. Look at the end of the README to see screenshots from use.
+This is a trend reports generator primarily designed for generating trend reports on my school's graduating student survey data from Qualtrics. However, it is configurable and can work with any type of data, especially survey data. I have included a [sample config](configs/sample.json) and [sample data](data/sample_data.csv) so you can test it. Look at the [end of the README](#screenshots) to see screenshots from the app being used.
 
 Overview
 --------
