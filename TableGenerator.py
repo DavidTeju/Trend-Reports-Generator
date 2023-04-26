@@ -25,9 +25,10 @@ class TableGenerator:
         )
 
         current_year = datetime.now().year
-        self.years = list(range(2019, current_year))
-        # TODO Remember to add for date past August if program can be run past August
-        # TODO Add option to include starting year in form
+        if datetime.now().month > 8:  # If the current month is past August, then generate for this year
+            current_year += 1
+        start_year = config.get("start_year", 2019)
+        self.years = list(range(start_year, current_year))
         self.by_year = {
             year: self.full_data_frame[self.in_year(self.full_data_frame, year)]
             for year in self.years
@@ -53,9 +54,22 @@ class TableGenerator:
         question_export_tags = table["sub_questions"]
 
         def passes_filter(x):
-            return (
-                eval(f"x{table['filter']}") if "filter" in table else [True for _ in x]
-            )
+            if "filter" not in table:
+                return [True for _ in x]
+
+            operator_map = {
+                ">": (lambda a, b: a > b),
+                "<": (lambda a, b: a < b),
+                ">=": (lambda a, b: a >= b),
+                "<=": (lambda a, b: a <= b),
+                "==": (lambda a, b: a == b),
+                "!=": (lambda a, b: a != b),
+            }
+
+            operator, operand = re.match(r"^([=!<>]{1,2})\s+(.*)$", table["filter"]).groups()
+            operand = int(operand) if isNum(operand) else operand
+
+            return [operator_map[operator](x_value, operand) for x_value in x]
 
         def convert_to_score(value):
             return float(value) if isNum(value) else self.score_map.get(value.lower())

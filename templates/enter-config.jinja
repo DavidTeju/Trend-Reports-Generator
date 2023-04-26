@@ -5,6 +5,14 @@
         <div class="form-top">
             <input type="submit" class="btn btn-primary ">
             <div>
+                <label for="year_start">Year Start:</label>
+                <select id="year_start" name="year_start" class="form-select">
+                    {% for year in range(1999, current_year + 1) %}
+                        <option value="{{ year }}">{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
                 <label for="datasource">Data Source:</label>
                 <select id="datasource" name="datasource" class="form-select">
                     {% for each in datasources %}
@@ -29,18 +37,20 @@
         // All defined indices start at 1
         let questionIndex = 1;
         const config = JSON.parse(`{{ config|tojson }}`);
+        console.log(config)
         const tables = config["section_config"] ?? [];
         const tableDiv = document.getElementById('tables');
         const subQuestionCurrentIndices = [];
         const freqKeyCurrentIndices = [];
 
-        const datasourceInput = document.getElementById('datasource');
-        datasourceInput.value = config['datasource'] ?? '';
+        document.getElementById('datasource').value = config['datasource'] ?? '';
+        document.getElementById('year_start').value = config['year_start'] ?? '';
 
         for (let eachTable of tables)
             addQuestion(eachTable);
 
         populateScoreMap(config['score_map']);
+
 
         document.getElementById('add-table').addEventListener('click', () => addQuestion(null))
         document.getElementById('add-score-map').addEventListener('click', () => addScoreMap())
@@ -100,13 +110,16 @@
             const questionInput = document.getElementById(`${questionIndex}-question`);
             const typeSelect = document.getElementById(`${questionIndex}-type`);
 
+            filterSelect.value = '';
+            filterInput.value = '';
             if (table['filter']) {
-                const filter = table['filter'].split(' ');
-                filterSelect.value = filter[0];
-                filterInput.value = filter[1];
-            } else {
-                filterSelect.value = '';
-                filterInput.value = '';
+                const filterRegex = /^([=!<>]{1,2})\s+(.*)$/;
+                const matches = table['filter'].match(filterRegex);
+
+                if (matches) {
+                    filterSelect.value = matches[1];
+                    filterInput.value = matches[2];
+                }
             }
             questionInput.value = table['question'] ?? '';
             typeSelect.value = table['type'] ?? '';
@@ -336,6 +349,11 @@
             const equalToOption = document.createElement('option');
             equalToOption.value = "==";
             equalToOption.innerHTML = "Equals to";
+            filterSelect.appendChild(equalToOption);
+
+            const notEqualToOption = document.createElement('option');
+            equalToOption.value = "!=";
+            equalToOption.innerHTML = "Not Equals to";
             filterSelect.appendChild(equalToOption);
 
             const filterInput = document.createElement('input');

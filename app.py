@@ -1,6 +1,7 @@
 import json
 import os
 from collections import defaultdict
+from datetime import datetime
 
 from flask import Flask, render_template, request
 
@@ -45,8 +46,9 @@ def create_config():
             config = json.load(json_file)
 
     datasources = [file for file in os.listdir("data") if file.endswith(".csv")]
+    current_year = datetime.now().year
     return render_template("enter-config.jinja", config=config or {}, title=config_name or "New Config/Report",
-                           datasources=datasources)
+                           datasources=datasources, current_year=current_year)
 
 
 @app.route("/confirm-config")
