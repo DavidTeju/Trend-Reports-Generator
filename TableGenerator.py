@@ -62,7 +62,7 @@ class TableGenerator:
 
         def get_mean_values_for_sub_question(year_values, question_export_tag):
             return (
-                year_values[question_export_tag]
+                year_values.get(question_export_tag, default=pd.Series())
                 .map(convert_to_score)
                 .where(passes_filter)
                 .mean()
@@ -87,7 +87,10 @@ class TableGenerator:
         return to_return
 
     def get_question(self, tag):
-        full_question = self.full_questions[self.full_data_frame.columns.get_loc(tag)]
+        try:
+            full_question = self.full_questions[self.full_data_frame.columns.get_loc(tag)]
+        except KeyError:
+            return f"Not Found - {tag}"
         full_question = re.sub(
             "\\(.*?\\)", "", full_question
         )  # Remove contextual info (in brackets like this)
@@ -136,7 +139,9 @@ class TableGenerator:
             try:
                 yes_frequency_values: pd.Series = frequency_values.loc[freq_keys].sum()
             except KeyError:
-                rows_to_remove = list(set(frequency_values.index) - {*freq_keys, "not found"})
+                rows_to_remove = list(
+                    set(frequency_values.index) - {*freq_keys, "not found"}
+                )
                 frequency_values.drop(rows_to_remove, inplace=True)
                 yes_frequency_values: pd.Series = frequency_values.sum()
 
