@@ -53,7 +53,7 @@ def create_config():
 def confirm_config(config: dict[str, list | int] = None):
     if config is not None:
         return render_template("confirm.jinja", config_name="Unsaved Config", config=config, is_new=True)
-        
+
     config_name = request.args.get("config")
     with open(f"configs/{config_name}.json") as json_file:
         config = json.load(json_file)
@@ -64,8 +64,8 @@ def confirm_config(config: dict[str, list | int] = None):
 def generate_tables():
     config_str = request.args.get("config-string")
 
-    TableGenerator.configure_generator(config_str)
-    tables = TableGenerator.generate_tables()
+    generator = TableGenerator(config_str)
+    tables = generator.generate_tables()
 
     to_html = lambda x: x.to_html(bold_rows=False).replace('<tr style="text-align: right;">', "<tr>")
 
