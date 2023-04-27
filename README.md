@@ -29,7 +29,7 @@ Usage
 3.  If creating a new configuration, select the data source and configure the questions, filters, and other settings as needed.
 4.  Save the configuration if desired.
 5.  Generate the report based on the configuration.
-6.  View the generated report with the provided tables and statistics.
+6.  View or export the generated report with the provided tables and statistics.
 
 Customization
 -------------
@@ -55,3 +55,6 @@ Screenshots
 
 ### Sample Generated Report
 <img width="700" alt="Sample of a generated trend report" src="https://user-images.githubusercontent.com/61572668/233503952-994d05db-1a2c-41d7-b6c8-320b029893ed.png">
+
+### Sample Report Export
+<img width="700" alt="image" src="https://user-images.githubusercontent.com/61572668/235009561-d2d90037-9cde-45e7-b129-f4363fb09777.png">
