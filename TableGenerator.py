@@ -25,7 +25,7 @@ class TableGenerator:
         Args:
             config_str (str): JSON configuration string containing settings for data processing and table generation.
         """
-        config = json.loads(config_str.lower())
+        config: dict = json.loads(config_str.lower())
         to_lower_if_string = lambda s: s.lower() if type(s) == str else s
         self.full_data_frame = pd.read_csv(f"data/{config['datasource']}").applymap(
             to_lower_if_string
@@ -46,8 +46,9 @@ class TableGenerator:
         current_year = datetime.now().year
         if datetime.now().month > 8:  # If the current month is past August, then generate for this year
             current_year += 1
-        start_year = config.get("start_year", 2019)
-        self.years = list(range(start_year, current_year))
+        end_year = config.get("year_end", current_year - 1)
+        start_year = config.get("year_start", 2019)
+        self.years = list(range(start_year, end_year + 1))
         self.by_year = {
             year: self.full_data_frame[self.in_year(self.full_data_frame, year)]
             for year in self.years
@@ -85,7 +86,7 @@ class TableGenerator:
 
         Returns
         --------
-        list
+        list[pd.DataFrame]
             A list of generated tables as pandas DataFrames.
         """
         return [self.generate_table(table) for table in self.tables_config]
@@ -129,7 +130,7 @@ class TableGenerator:
 
         def get_mean_values_for_sub_question(year_values, question_export_tag):
             return (
-                year_values.get(question_export_tag, default=pd.Series())
+                year_values.get(question_export_tag, default=pd.Series(dtype=float))
                 .map(convert_to_score)
                 .where(passes_filter)
                 .mean()

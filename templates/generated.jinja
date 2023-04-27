@@ -1,5 +1,10 @@
 {% extends "index.jinja" %}
 {% block body %}
+    <!-- Add this line inside your <body> tag -->
+    <a href="{{ url_for('download_excel', config_string=request.args.get('config-string')) }}" class="btn btn-primary"
+       style="margin-bottom: 1em">Download
+        Excel</a>
+
     {% for key, value in tables.items() %}
         <h2>{{ key }}</h2>
         {{ value|safe }}

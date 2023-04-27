@@ -7,7 +7,15 @@
             <div>
                 <label for="year_start">Year Start:</label>
                 <select id="year_start" name="year_start" class="form-select">
-                    {% for year in range(1999, current_year + 1) %}
+                    {% for year in range(current_year - 15, current_year + 1) %}
+                        <option value="{{ year }}">{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="year_end">Year End:</label>
+                <select id="year_end" name="year_end" class="form-select">
+                    {% for year in range(current_year - 15, current_year + 1) %}
                         <option value="{{ year }}">{{ year }}</option>
                     {% endfor %}
                 </select>
@@ -37,7 +45,6 @@
         // All defined indices start at 1
         let questionIndex = 1;
         const config = JSON.parse(`{{ config|tojson }}`);
-        console.log(config)
         const tables = config["section_config"] ?? [];
         const tableDiv = document.getElementById('tables');
         const subQuestionCurrentIndices = [];
@@ -45,6 +52,7 @@
 
         document.getElementById('datasource').value = config['datasource'] ?? '';
         document.getElementById('year_start').value = config['year_start'] ?? '';
+        document.getElementById('year_end').value = config['year_end'] ?? '';
 
         for (let eachTable of tables)
             addQuestion(eachTable);
@@ -354,7 +362,7 @@
             const notEqualToOption = document.createElement('option');
             equalToOption.value = "!=";
             equalToOption.innerHTML = "Not Equals to";
-            filterSelect.appendChild(equalToOption);
+            filterSelect.appendChild(notEqualToOption);
 
             const filterInput = document.createElement('input');
             filterInput.type = "text";

@@ -1,9 +1,12 @@
 import json
 import os
+import re
 from collections import defaultdict
 from datetime import datetime
 
-from flask import Flask, render_template, request
+import io
+import pandas as pd
+from flask import Flask, render_template, request, send_file, make_response
 
 from TableGenerator import TableGenerator
 
@@ -76,6 +79,34 @@ def generate_tables():
     return render_template("generated.jinja", tables=rendered_tables)
 
 
+@app.route("/download-excel")
+def download_excel():
+    config_str = request.args.get("config_string")
+
+    generator = TableGenerator(config_str)
+    tables: list[pd.DataFrame] = generator.generate_tables()
+
+    # Create an in-memory binary stream to store the Excel data
+    output = io.BytesIO()
+
+    # Create a Pandas ExcelWriter object using the binary stream as the output file
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        for i, table in enumerate(tables):
+            safe_name = re.sub(r'[\\/*?:"<>|]', "", table.name)
+            safe_name = f"({i}) {safe_name[:(30 - 4) - (i // 10)]}"  # Limit the length of the sheet name
+            table.to_excel(writer, sheet_name=safe_name)
+    # Set the position of the binary stream to the beginning
+    output.seek(0)
+
+    # Create a response with the binary stream as the Excel file
+    response = make_response(
+        send_file(io.BytesIO(output.getvalue()), as_attachment=True, download_name="report.xlsx", max_age=0))
+    response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    output.close()
+
+    return response
+
+
 def config_form_to_json(form_data: dict[str, str]):
     tables: defaultdict[str, int | dict[str, str | list]] = defaultdict(lambda: defaultdict(list))
     score_map = {}
@@ -83,11 +114,16 @@ def config_form_to_json(form_data: dict[str, str]):
                   "score_map": score_map,
                   "datasource": form_data["datasource"]}
 
+    if form_data.get("year_start"):
+        new_config["year_start"] = int(form_data["year_start"])
+    if form_data.get("year_end"):
+        new_config["year_end"] = int(form_data["year_end"])
+
     for key, value in form_data.items():
         key = key.replace("filter-type", "filterType")
         split_key = key.split("-")
         if len(split_key) == 1:
-            if key == "datasource":
+            if key in ["datasource", "year_start", "year_end"]:
                 continue
             score_map[key] = int(value)
         elif len(split_key) == 2:
@@ -104,7 +140,6 @@ def config_form_to_json(form_data: dict[str, str]):
 
     for table in tables.values():
         new_config["section_config"].append(table)
-    print(json.dumps(new_config, indent=4))
     return new_config
 
 

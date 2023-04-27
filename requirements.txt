@@ -6,6 +6,7 @@ cssbeautifier==1.14.7
 cycler==0.11.0
 djlint==1.19.16
 EditorConfig==0.12.3
+et-xmlfile==1.1.0
 Flask==2.2.3
 fonttools==4.38.0
 html-tag-names==0.1.2
@@ -17,6 +18,7 @@ kiwisolver==1.4.4
 MarkupSafe==2.1.2
 matplotlib==3.7.0
 numpy==1.24.1
+openpyxl==3.1.2
 packaging==23.0
 pandas==1.5.3
 pathspec==0.11.1
